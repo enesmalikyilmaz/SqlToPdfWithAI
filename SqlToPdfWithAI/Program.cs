@@ -11,6 +11,10 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.Configure<SqlToPdfWithAI.Services.AppLimits>(
+    builder.Configuration.GetSection("Limits"));
+builder.Services.AddScoped<SqlToPdfWithAI.Services.DbQueryService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
