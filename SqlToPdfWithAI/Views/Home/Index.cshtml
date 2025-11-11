@@ -1,41 +1,168 @@
 ﻿@{
-    ViewData["Title"] = "SQL to PDF";
+    ViewData["Title"] = "SQL to PDF - MVP";
 }
+
+<div class="container mt-4">
+    <h1 class="mb-3">SQL → PDF Rapor Aracı (MVP)</h1>
+
+    <form id="queryForm" method="post">
+        <div class="mb-3">
+            <label for="sql" class="form-label">SQL Sorgusu</label>
+            <textarea id="sql" name="sql" class="form-control" rows="6"
+                      placeholder="Örn: SELECT TOP 10 name, create_date FROM sys.tables ORDER BY create_date DESC"></textarea>
+        </div>
+
+        <button id="runBtn" class="btn btn-primary" type="submit">
+            Rapor Al
+        </button>
+        <span id="helpText" class="text-muted ms-2">Sorgu sonucu aşağıda görünecek.</span>
+    </form>
+
+    <hr class="my-4" />
+
+    <!-- Sonuç Kartı -->
+    <div id="resultCard" class="card d-none">
+        <div class="card-body">
+            <h5 class="card-title">Sorgu Sonucu</h5>
+            <p class="card-text mb-1"><strong>ReportId:</strong> <span id="reportId"></span></p>
+            <p class="card-text mb-1"><strong>Satır:</strong> <span id="rowCount"></span></p>
+            <p class="card-text mb-3"><strong>Süre:</strong> <span id="duration"></span> ms</p>
+
+            <!-- PDF bağlantısı -->
+            <a id="pdfLink" href="#" class="btn btn-success d-none" target="_blank">PDF indir</a>
+        </div>
+    </div>
+
+    <!-- Öni̇zleme Tablosu -->
+    <div id="previewWrap" class="mt-3 d-none">
+        <h5>Önizleme (ilk 20 satır)</h5>
+        <div class="table-responsive">
+            <table id="previewTable" class="table table-bordered table-sm">
+                <thead><tr id="theadRow"></tr></thead>
+                <tbody id="tbodyRows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Hata Alanı -->
+    <div id="errorBox" class="alert alert-danger mt-3 d-none"></div>
+</div>
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          const btn = document.querySelector('button[type="submit"]');
-          const txt = document.getElementById('sql');
-          btn.disabled = false;
+        (function () {
+          const form = document.getElementById('queryForm');
+          const btn  = document.getElementById('runBtn');
+          const sqlT = document.getElementById('sql');
 
-          document.querySelector('form').addEventListener('submit', async (e) => {
+          const resultCard = document.getElementById('resultCard');
+          const reportIdEl = document.getElementById('reportId');
+          const rowCountEl = document.getElementById('rowCount');
+          const durationEl = document.getElementById('duration');
+          const pdfLink    = document.getElementById('pdfLink');
+
+          const previewWrap = document.getElementById('previewWrap');
+          const theadRow    = document.getElementById('theadRow');
+          const tbodyRows   = document.getElementById('tbodyRows');
+
+          const errorBox = document.getElementById('errorBox');
+
+          // Yardımcı: görünürlük / sıfırlama
+          function show(el){ el.classList.remove('d-none'); }
+          function hide(el){ el.classList.add('d-none'); }
+          function clearChildren(el){ while (el.firstChild) el.removeChild(el.firstChild); }
+
+          form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            btn.disabled = true;
-            btn.textContent = 'Çalıştırılıyor...';
+            hide(errorBox);
+            hide(resultCard);
+            hide(previewWrap);
+            pdfLink.classList.add('d-none');
 
-            const sql = txt.value;
-            const resp = await fetch('/api/query', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sql })
-            });
-
-            if (!resp.ok) {
-              const msg = await resp.text();
-              alert('Hata: ' + msg);
-              btn.disabled = false;
-              btn.textContent = 'Rapor Al';
+            const sql = sqlT.value.trim();
+            if (!sql) {
+              errorBox.textContent = 'SQL boş olamaz.';
+              show(errorBox);
               return;
             }
 
-            const data = await resp.json();
-            console.log('QueryResult', data);
-            alert(`Satır: ${data.rowCount} | Süre: ${data.durationMs}ms\n3. günde PDF hazırlayacağız.`);
-            btn.disabled = false;
-            btn.textContent = 'Rapor Al';
+            // Basit UI durumu
+            btn.disabled = true;
+            const oldText = btn.textContent;
+            btn.textContent = 'Çalıştırılıyor...';
+
+            try {
+              const resp = await fetch('/api/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sql })
+              });
+
+              if (!resp.ok) {
+                const msg = await resp.text();
+                throw new Error(msg || ('HTTP ' + resp.status));
+              }
+
+              const data = await resp.json();
+              // data: { reportId, rowCount, durationMs, columns[], preview[] }
+
+              // Sonuç bilgilerini yaz
+              reportIdEl.textContent = data.reportId;
+              rowCountEl.textContent = data.rowCount;
+              durationEl.textContent = data.durationMs;
+              show(resultCard);
+
+              // PDF linkini hazırla
+              pdfLink.href = `/api/report/${data.reportId}`;
+              pdfLink.classList.remove('d-none');
+
+              // Önizleme tablosu
+              clearChildren(theadRow);
+              clearChildren(tbodyRows);
+
+              if (data.columns && data.columns.length > 0) {
+                // thead
+                data.columns.forEach(c => {
+                  const th = document.createElement('th');
+                  th.textContent = c;
+                  theadRow.appendChild(th);
+                });
+
+                // tbody
+                if (data.preview && data.preview.length) {
+                  data.preview.forEach(row => {
+                    const tr = document.createElement('tr');
+                    data.columns.forEach(c => {
+                      const td = document.createElement('td');
+                      td.textContent = (row[c] !== undefined && row[c] !== null) ? row[c] : '';
+                      tr.appendChild(td);
+                    });
+                    tbodyRows.appendChild(tr);
+                  });
+                } else {
+                  // Örn. hiç kayıt yoksa
+                  const tr = document.createElement('tr');
+                  const td = document.createElement('td');
+                  td.colSpan = data.columns.length;
+                  td.textContent = 'Önizleme verisi yok.';
+                  tr.appendChild(td);
+                  tbodyRows.appendChild(tr);
+                }
+
+                show(previewWrap);
+              } else {
+                // Kolon yoksa (0 satır dönmüş olabilir)
+                hide(previewWrap);
+              }
+
+            } catch (err) {
+              errorBox.textContent = 'Hata: ' + (err.message || err);
+              show(errorBox);
+            } finally {
+              btn.disabled = false;
+              btn.textContent = oldText;
+            }
           });
-        });
+        })();
     </script>
 }
-

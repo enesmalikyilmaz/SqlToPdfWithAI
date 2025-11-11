@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SqlToPdfWithAI.Dtos;
-using SqlToPdfWithAI.DTOs;
 using SqlToPdfWithAI.Services;
 
 namespace SqlToPdfWithAI.Controllers;
@@ -29,7 +28,7 @@ public class QueryController : ControllerBase
         if (req is null || string.IsNullOrWhiteSpace(req.Sql))
             return BadRequest("SQL boş olamaz.");
 
-        // Basit (iptidai) kontrol: SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geç
+        // Basit kontrol: SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geç
         if (!QueryGuard.IsSafeSelect(req.Sql))
             return BadRequest("Sadece SELECT sorgularına izin verilir.");
 
@@ -45,6 +44,28 @@ public class QueryController : ControllerBase
                 Columns = columns,
                 Preview = rows.Take(20).Cast<object>().ToArray()
             };
+
+            var persist = new QueryPersistModelDto
+            {
+                ReportId = res.ReportId,
+                Sql = req.Sql,
+                Columns = res.Columns,
+                Rows = rows.Select(r => ((IDictionary<string, object>)r)
+                                  .ToDictionary(kv => kv.Key, kv => kv.Value)).ToList(),
+                RowCount = res.RowCount,
+                DurationMs = res.DurationMs,
+                CreatedAt = DateTime.Now
+            };
+
+            Directory.CreateDirectory("storage");
+            var jsonPath = Path.Combine("storage", $"{res.ReportId}.json");
+            await System.IO.File.WriteAllTextAsync(
+                jsonPath,
+                System.Text.Json.JsonSerializer.Serialize(
+                    persist,
+                    new System.Text.Json.JsonSerializerOptions { WriteIndented = false }
+                )
+            );
 
             _log.LogInformation("Query ok. rows={RowCount} ms={Ms}", res.RowCount, res.DurationMs);
             return Ok(res);
