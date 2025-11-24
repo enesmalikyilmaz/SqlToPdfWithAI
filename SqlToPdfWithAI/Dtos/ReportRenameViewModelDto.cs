@@ -1,8 +1,8 @@
 ﻿namespace SqlToPdfWithAI.Dtos
 {
-    public class QueryRequestDto
+    public class ReportRenameViewModelDto
     {
-        public string Sql { get; set; } = string.Empty;
+        public Guid ReportId { get; set; }
         public string ReportName { get; set; } = string.Empty;
     }
 }

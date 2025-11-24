@@ -1,0 +1,46 @@
+﻿@model List<SqlToPdfWithAI.Dtos.QueryPersistModelDto>
+
+<div class="container mt-4">
+
+    <h2>Rapor Arşivi</h2>
+
+    <form method="get" class="mb-3">
+        <input name="q" class="form-control" placeholder="Rapor ID veya SQL içinde ara..." />
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">Henüz rapor üretilmemiş.</div>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>Rapor ID</th>
+                    <th>Rapor Adı</th>
+                    <th>Tarih</th>
+                    <th>Satır</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.ReportId</td>
+                        <td>@r.ReportName</td>
+                        <td>@r.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@r.RowCount</td>
+                        <td>
+                            <a href="/api/report/@r.ReportId" target="_blank" class="btn btn-sm btn-primary">
+                                PDF indir
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>

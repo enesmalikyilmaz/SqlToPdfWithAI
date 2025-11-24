@@ -31,16 +31,18 @@ public static class PdfHelper
         QuestPDF.Settings.License = LicenseType.Community;
 
         //Tablo kısmını dener; patlarsa minimal PDF'e düşer
-        try
-        {
-            GenerateFullPdf(data, pdfPath);
-            return pdfPath;
-        }
-        catch
-        {
-            GenerateSafeMinimalPdf(data, pdfPath);
-            return pdfPath;
-        }
+        //try
+        //{
+        //    GenerateFullPdf(data, pdfPath);
+        //    return pdfPath;
+        //}
+        //catch
+        //{
+        //    //GenerateSafeMinimalPdf(data, pdfPath);
+        //    //return pdfPath;
+        //}
+        GenerateFullPdf(data, pdfPath);
+         return pdfPath;
     }
 
     private static void GenerateFullPdf(QueryPersistModelDto data, string pdfPath)
@@ -57,7 +59,7 @@ public static class PdfHelper
             {
                 page.Size(PageSizes.A4);
                 page.Margin(25);
-                page.Header().Text("SQL Raporu").SemiBold().FontSize(22);
+                page.Header().Text(data.ReportName).SemiBold().FontSize(22);
 
                 page.Content().Column(col =>
                 {

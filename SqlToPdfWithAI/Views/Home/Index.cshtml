@@ -11,6 +11,11 @@
             <textarea id="sql" name="sql" class="form-control" rows="6"
                       placeholder="Örn: SELECT TOP 10 name, create_date FROM sys.tables ORDER BY create_date DESC"></textarea>
         </div>
+        <div class="mb-3">
+            <label class="form-label">Rapor Adı</label>
+            <input id="reportName" name="reportName" class="form-control"
+                   placeholder="Örn: Satış Analizi / Depo Raporu" />
+        </div>
 
         <button id="runBtn" class="btn btn-primary" type="submit">
             Rapor Al
@@ -66,6 +71,13 @@
           const tbodyRows   = document.getElementById('tbodyRows');
 
           const errorBox = document.getElementById('errorBox');
+          const reportName = document.getElementById('reportName').value;
+
+            body: JSON.stringify({
+                sql: sql,
+                reportName: reportName
+        })
+
 
           // Yardımcı: görünürlük / sıfırlama
           function show(el){ el.classList.remove('d-none'); }

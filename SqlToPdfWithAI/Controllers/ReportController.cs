@@ -12,7 +12,10 @@ namespace SqlToPdfWithAI.Controllers
         [HttpGet("{id:guid}")]
         public IActionResult Get(Guid id)
         {
-            var jsonPath = Path.Combine("storage", $"{id}.json");
+            var storageRoot = Path.Combine(AppContext.BaseDirectory, "storage");
+            Directory.CreateDirectory(storageRoot);
+
+            var jsonPath = Path.Combine(storageRoot, $"{id}.json");
             if (!System.IO.File.Exists(jsonPath))
                 return NotFound("Rapor verisi bulunamadı.");
 

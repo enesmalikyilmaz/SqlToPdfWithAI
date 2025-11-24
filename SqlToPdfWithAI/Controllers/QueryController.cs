@@ -34,6 +34,9 @@ public class QueryController : ControllerBase
 
         try
         {
+            var storageRoot = Path.Combine(AppContext.BaseDirectory, "storage");
+            Directory.CreateDirectory(storageRoot);
+
             var (rows, columns, ms) = await _db.RunSelectAsync(req.Sql);
 
             var res = new QueryResponseDto
@@ -45,20 +48,28 @@ public class QueryController : ControllerBase
                 Preview = rows.Take(20).Cast<object>().ToArray()
             };
 
+            var dictRows = rows
+            .Select(r => ((IDictionary<string, object>)r)
+                .ToDictionary(kv => kv.Key, kv => kv.Value))
+            .ToList();
+
+            _ = ChartHelper.RenderCharts(dictRows, res.Columns, res.ReportId, storageRoot);
+
             var persist = new QueryPersistModelDto
             {
                 ReportId = res.ReportId,
+                ReportName = string.IsNullOrWhiteSpace(req.ReportName)
+                ? "Raporum"
+                : req.ReportName.Trim(),
                 Sql = req.Sql,
                 Columns = res.Columns,
-                Rows = rows.Select(r => ((IDictionary<string, object>)r)
-                                  .ToDictionary(kv => kv.Key, kv => kv.Value)).ToList(),
+                Rows = dictRows,       // artık burayı dictRows kullanıyoruz
                 RowCount = res.RowCount,
                 DurationMs = res.DurationMs,
                 CreatedAt = DateTime.Now
             };
 
-            Directory.CreateDirectory("storage");
-            var jsonPath = Path.Combine("storage", $"{res.ReportId}.json");
+            var jsonPath = Path.Combine(storageRoot, $"{res.ReportId}.json");
             await System.IO.File.WriteAllTextAsync(
                 jsonPath,
                 System.Text.Json.JsonSerializer.Serialize(

@@ -3,6 +3,7 @@
     public class QueryPersistModelDto
     {
         public Guid ReportId { get; set; }
+        public string ReportName { get; set; } = string.Empty;
         public string Sql { get; set; } = string.Empty;
         public string[] Columns { get; set; } = Array.Empty<string>();
         public List<Dictionary<string, object?>> Rows { get; set; } = new();
