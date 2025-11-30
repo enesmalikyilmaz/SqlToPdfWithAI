@@ -16,6 +16,7 @@
             <input id="reportName" name="reportName" class="form-control"
                    placeholder="Örn: Satış Analizi / Depo Raporu" />
         </div>
+        
 
         <button id="runBtn" class="btn btn-primary" type="submit">
             Rapor Al
@@ -25,7 +26,7 @@
 
     <hr class="my-4" />
 
-    <!-- Sonuç Kartı -->
+    <!-- Sonuç Kısmı -->
     <div id="resultCard" class="card d-none">
         <div class="card-body">
             <h5 class="card-title">Sorgu Sonucu</h5>
@@ -33,12 +34,26 @@
             <p class="card-text mb-1"><strong>Satır:</strong> <span id="rowCount"></span></p>
             <p class="card-text mb-3"><strong>Süre:</strong> <span id="duration"></span> ms</p>
 
+            <div class="mb-3">
+                <label class="form-label">Grafik X Ekseni Kolonu (isteğe bağlı)</label>
+                <select id="xColumn" class="form-select">
+                    <option value="">Otomatik seç</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Grafik Y Ekseni Kolonu (isteğe bağlı)</label>
+                <select id="yColumn" class="form-select">
+                    <option value="">Otomatik seç</option>
+                </select>
+            </div>
+
             <!-- PDF bağlantısı -->
             <a id="pdfLink" href="#" class="btn btn-success d-none" target="_blank">PDF indir</a>
         </div>
     </div>
 
-    <!-- Öni̇zleme Tablosu -->
+    <!-- Önizleme Tablosu -->
     <div id="previewWrap" class="mt-3 d-none">
         <h5>Önizleme (ilk 20 satır)</h5>
         <div class="table-responsive">
@@ -56,125 +71,147 @@
 @section Scripts {
     <script>
         (function () {
-          const form = document.getElementById('queryForm');
-          const btn  = document.getElementById('runBtn');
-          const sqlT = document.getElementById('sql');
+            const form       = document.getElementById('queryForm');
+            const btn        = document.getElementById('runBtn');
+            const sqlT       = document.getElementById('sql');
 
-          const resultCard = document.getElementById('resultCard');
-          const reportIdEl = document.getElementById('reportId');
-          const rowCountEl = document.getElementById('rowCount');
-          const durationEl = document.getElementById('duration');
-          const pdfLink    = document.getElementById('pdfLink');
+            const resultCard = document.getElementById('resultCard');
+            const reportIdEl = document.getElementById('reportId');
+            const rowCountEl = document.getElementById('rowCount');
+            const durationEl = document.getElementById('duration');
+            const pdfLink    = document.getElementById('pdfLink');
 
-          const previewWrap = document.getElementById('previewWrap');
-          const theadRow    = document.getElementById('theadRow');
-          const tbodyRows   = document.getElementById('tbodyRows');
+            const previewWrap = document.getElementById('previewWrap');
+            const theadRow    = document.getElementById('theadRow');
+            const tbodyRows   = document.getElementById('tbodyRows');
 
-          const errorBox = document.getElementById('errorBox');
-          const reportName = document.getElementById('reportName').value;
+            const errorBox    = document.getElementById('errorBox');
 
-            body: JSON.stringify({
-                sql: sql,
-                reportName: reportName
-        })
+            const xSelect     = document.getElementById('xColumn');
+            const ySelect     = document.getElementById('yColumn');
 
+            
+            function show(el) { el.classList.remove('d-none'); }
+            function hide(el) { el.classList.add('d-none'); }
+            function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
-          // Yardımcı: görünürlük / sıfırlama
-          function show(el){ el.classList.remove('d-none'); }
-          function hide(el){ el.classList.add('d-none'); }
-          function clearChildren(el){ while (el.firstChild) el.removeChild(el.firstChild); }
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); // SAYFA YENİLENMESİN
 
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hide(errorBox);
-            hide(resultCard);
-            hide(previewWrap);
-            pdfLink.classList.add('d-none');
+                hide(errorBox);
+                hide(resultCard);
+                hide(previewWrap);
+                pdfLink.classList.add('d-none');
 
-            const sql = sqlT.value.trim();
-            if (!sql) {
-              errorBox.textContent = 'SQL boş olamaz.';
-              show(errorBox);
-              return;
-            }
-
-            // Basit UI durumu
-            btn.disabled = true;
-            const oldText = btn.textContent;
-            btn.textContent = 'Çalıştırılıyor...';
-
-            try {
-              const resp = await fetch('/api/query', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sql })
-              });
-
-              if (!resp.ok) {
-                const msg = await resp.text();
-                throw new Error(msg || ('HTTP ' + resp.status));
-              }
-
-              const data = await resp.json();
-              // data: { reportId, rowCount, durationMs, columns[], preview[] }
-
-              // Sonuç bilgilerini yaz
-              reportIdEl.textContent = data.reportId;
-              rowCountEl.textContent = data.rowCount;
-              durationEl.textContent = data.durationMs;
-              show(resultCard);
-
-              // PDF linkini hazırla
-              pdfLink.href = `/api/report/${data.reportId}`;
-              pdfLink.classList.remove('d-none');
-
-              // Önizleme tablosu
-              clearChildren(theadRow);
-              clearChildren(tbodyRows);
-
-              if (data.columns && data.columns.length > 0) {
-                // thead
-                data.columns.forEach(c => {
-                  const th = document.createElement('th');
-                  th.textContent = c;
-                  theadRow.appendChild(th);
-                });
-
-                // tbody
-                if (data.preview && data.preview.length) {
-                  data.preview.forEach(row => {
-                    const tr = document.createElement('tr');
-                    data.columns.forEach(c => {
-                      const td = document.createElement('td');
-                      td.textContent = (row[c] !== undefined && row[c] !== null) ? row[c] : '';
-                      tr.appendChild(td);
-                    });
-                    tbodyRows.appendChild(tr);
-                  });
-                } else {
-                  // Örn. hiç kayıt yoksa
-                  const tr = document.createElement('tr');
-                  const td = document.createElement('td');
-                  td.colSpan = data.columns.length;
-                  td.textContent = 'Önizleme verisi yok.';
-                  tr.appendChild(td);
-                  tbodyRows.appendChild(tr);
+                const sql = sqlT.value.trim();
+                if (!sql) {
+                    errorBox.textContent = 'SQL boş olamaz.';
+                    show(errorBox);
+                    return;
                 }
 
-                show(previewWrap);
-              } else {
-                // Kolon yoksa (0 satır dönmüş olabilir)
-                hide(previewWrap);
-              }
+                const reportName = document.getElementById('reportName').value || '';
+                const xColumn = xSelect.value || null;
+                const yColumn = ySelect.value || null;
 
-            } catch (err) {
-              errorBox.textContent = 'Hata: ' + (err.message || err);
-              show(errorBox);
-            } finally {
-              btn.disabled = false;
-              btn.textContent = oldText;
-            }
-          });
+                
+                btn.disabled = true;
+                const oldText = btn.textContent;
+                btn.textContent = 'Çalıştırılıyor...';
+
+                try {
+                    const resp = await fetch('/api/query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            sql: sql,
+                            reportName: reportName,
+                            xColumn: xColumn,
+                            yColumn: yColumn
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        const msg = await resp.text();
+                        throw new Error(msg || ('HTTP ' + resp.status));
+                    }
+
+                    const data = await resp.json();
+                    
+                    
+                    xSelect.length = 1;
+                    ySelect.length = 1;
+
+                    if (data.columns && data.columns.length) {
+                        data.columns.forEach(colName => {
+                            const optX = document.createElement('option');
+                            optX.value = colName;
+                            optX.textContent = colName;
+                            xSelect.appendChild(optX);
+
+                            const optY = document.createElement('option');
+                            optY.value = colName;
+                            optY.textContent = colName;
+                            ySelect.appendChild(optY);
+                        });
+                    }
+
+                    // Sonuç bilgilerini yaz
+                    reportIdEl.textContent = data.reportId;
+                    rowCountEl.textContent = data.rowCount;
+                    durationEl.textContent = data.durationMs;
+                    show(resultCard);
+
+                    // PDF linkini hazırla
+                    pdfLink.href = `/api/report/${data.reportId}`;
+                    pdfLink.classList.remove('d-none');
+
+                    // Önizleme tablosu
+                    clearChildren(theadRow);
+                    clearChildren(tbodyRows);
+
+                    if (data.columns && data.columns.length > 0) {
+                        // thead
+                        data.columns.forEach(c => {
+                            const th = document.createElement('th');
+                            th.textContent = c;
+                            theadRow.appendChild(th);
+                        });
+
+                        // tbody
+                        if (data.preview && data.preview.length) {
+                            data.preview.forEach(row => {
+                                const tr = document.createElement('tr');
+                                data.columns.forEach(c => {
+                                    const td = document.createElement('td');
+                                    const val = row[c];
+                                    td.textContent = (val !== undefined && val !== null) ? val : '';
+                                    tr.appendChild(td);
+                                });
+                                tbodyRows.appendChild(tr);
+                            });
+                        } else {
+                            const tr = document.createElement('tr');
+                            const td = document.createElement('td');
+                            td.colSpan = data.columns.length;
+                            td.textContent = 'Önizleme verisi yok.';
+                            tr.appendChild(td);
+                            tbodyRows.appendChild(tr);
+                        }
+
+                        show(previewWrap);
+                    } else {
+                        hide(previewWrap);
+                    }
+
+                } catch (err) {
+                    errorBox.textContent = 'Hata: ' + (err.message || err);
+                    show(errorBox);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = oldText;
+                }
+            });
         })();
     </script>
 }

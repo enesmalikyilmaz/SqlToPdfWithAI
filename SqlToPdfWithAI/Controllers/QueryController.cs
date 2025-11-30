@@ -28,7 +28,7 @@ public class QueryController : ControllerBase
         if (req is null || string.IsNullOrWhiteSpace(req.Sql))
             return BadRequest("SQL boş olamaz.");
 
-        // Basit kontrol: SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geç
+        // Basit kontrol yapıyoruz SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geç
         if (!QueryGuard.IsSafeSelect(req.Sql))
             return BadRequest("Sadece SELECT sorgularına izin verilir.");
 
@@ -53,7 +53,14 @@ public class QueryController : ControllerBase
                 .ToDictionary(kv => kv.Key, kv => kv.Value))
             .ToList();
 
-            _ = ChartHelper.RenderCharts(dictRows, res.Columns, res.ReportId, storageRoot);
+            _ = ChartHelper.RenderCharts(
+                dictRows,
+                res.Columns,
+                res.ReportId,
+                storageRoot,
+                req.XColumn,
+                req.YColumn
+            );
 
             var persist = new QueryPersistModelDto
             {
@@ -63,7 +70,7 @@ public class QueryController : ControllerBase
                 : req.ReportName.Trim(),
                 Sql = req.Sql,
                 Columns = res.Columns,
-                Rows = dictRows,       // artık burayı dictRows kullanıyoruz
+                Rows = dictRows,       
                 RowCount = res.RowCount,
                 DurationMs = res.DurationMs,
                 CreatedAt = DateTime.Now
@@ -72,13 +79,11 @@ public class QueryController : ControllerBase
             var jsonPath = Path.Combine(storageRoot, $"{res.ReportId}.json");
             await System.IO.File.WriteAllTextAsync(
                 jsonPath,
-                System.Text.Json.JsonSerializer.Serialize(
-                    persist,
-                    new System.Text.Json.JsonSerializerOptions { WriteIndented = false }
-                )
+                System.Text.Json.JsonSerializer.Serialize(persist)
             );
 
-            _log.LogInformation("Query ok. rows={RowCount} ms={Ms}", res.RowCount, res.DurationMs);
+            _log.LogInformation("Query ok. rows={RowCount} ms={Ms} x={X} y={Y}",
+                res.RowCount, res.DurationMs, req.XColumn, req.YColumn);
             return Ok(res);
         }
         catch (Exception ex)
