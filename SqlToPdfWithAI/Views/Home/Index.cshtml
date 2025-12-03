@@ -16,6 +16,8 @@
             <input id="reportName" name="reportName" class="form-control"
                    placeholder="Örn: Satış Analizi / Depo Raporu" />
         </div>
+
+        
         
 
         <button id="runBtn" class="btn btn-primary" type="submit">
@@ -34,19 +36,7 @@
             <p class="card-text mb-1"><strong>Satır:</strong> <span id="rowCount"></span></p>
             <p class="card-text mb-3"><strong>Süre:</strong> <span id="duration"></span> ms</p>
 
-            <div class="mb-3">
-                <label class="form-label">Grafik X Ekseni Kolonu (isteğe bağlı)</label>
-                <select id="xColumn" class="form-select">
-                    <option value="">Otomatik seç</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Grafik Y Ekseni Kolonu (isteğe bağlı)</label>
-                <select id="yColumn" class="form-select">
-                    <option value="">Otomatik seç</option>
-                </select>
-            </div>
+            
 
             <!-- PDF bağlantısı -->
             <a id="pdfLink" href="#" class="btn btn-success d-none" target="_blank">PDF indir</a>
@@ -87,16 +77,12 @@
 
             const errorBox    = document.getElementById('errorBox');
 
-            const xSelect     = document.getElementById('xColumn');
-            const ySelect     = document.getElementById('yColumn');
-
-            
-            function show(el) { el.classList.remove('d-none'); }
-            function hide(el) { el.classList.add('d-none'); }
-            function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+            function show(el){ el.classList.remove('d-none'); }
+            function hide(el){ el.classList.add('d-none'); }
+            function clearChildren(el){ while (el.firstChild) el.removeChild(el.firstChild); }
 
             form.addEventListener('submit', async (e) => {
-                e.preventDefault(); // SAYFA YENİLENMESİN
+                e.preventDefault();
 
                 hide(errorBox);
                 hide(resultCard);
@@ -111,10 +97,7 @@
                 }
 
                 const reportName = document.getElementById('reportName').value || '';
-                const xColumn = xSelect.value || null;
-                const yColumn = ySelect.value || null;
 
-                
                 btn.disabled = true;
                 const oldText = btn.textContent;
                 btn.textContent = 'Çalıştırılıyor...';
@@ -125,9 +108,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             sql: sql,
-                            reportName: reportName,
-                            xColumn: xColumn,
-                            yColumn: yColumn
+                            reportName: reportName
                         })
                     });
 
@@ -137,26 +118,8 @@
                     }
 
                     const data = await resp.json();
-                    
-                    
-                    xSelect.length = 1;
-                    ySelect.length = 1;
 
-                    if (data.columns && data.columns.length) {
-                        data.columns.forEach(colName => {
-                            const optX = document.createElement('option');
-                            optX.value = colName;
-                            optX.textContent = colName;
-                            xSelect.appendChild(optX);
-
-                            const optY = document.createElement('option');
-                            optY.value = colName;
-                            optY.textContent = colName;
-                            ySelect.appendChild(optY);
-                        });
-                    }
-
-                    // Sonuç bilgilerini yaz
+                    // Sonuç bilgileri
                     reportIdEl.textContent = data.reportId;
                     rowCountEl.textContent = data.rowCount;
                     durationEl.textContent = data.durationMs;
@@ -164,6 +127,7 @@
 
                     // PDF linkini hazırla
                     pdfLink.href = `/api/report/${data.reportId}`;
+                    pdfLink.target = '_blank';
                     pdfLink.classList.remove('d-none');
 
                     // Önizleme tablosu
@@ -171,14 +135,13 @@
                     clearChildren(tbodyRows);
 
                     if (data.columns && data.columns.length > 0) {
-                        // thead
+
                         data.columns.forEach(c => {
                             const th = document.createElement('th');
                             th.textContent = c;
                             theadRow.appendChild(th);
                         });
 
-                        // tbody
                         if (data.preview && data.preview.length) {
                             data.preview.forEach(row => {
                                 const tr = document.createElement('tr');
@@ -215,3 +178,4 @@
         })();
     </script>
 }
+

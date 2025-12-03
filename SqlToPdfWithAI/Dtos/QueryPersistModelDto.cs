@@ -10,5 +10,7 @@
         public int RowCount { get; set; }
         public long DurationMs { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string? XColumn { get; set; }
+        public string? YColumn { get; set; }
     }
 }

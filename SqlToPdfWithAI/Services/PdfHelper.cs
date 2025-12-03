@@ -30,19 +30,29 @@ public static class PdfHelper
         // QuestPDF genel ayarları
         QuestPDF.Settings.License = LicenseType.Community;
 
-        //Tablo kısmını dener; patlarsa minimal PDF'e düşer
-        //try
-        //{
-        //    GenerateFullPdf(data, pdfPath);
-        //    return pdfPath;
-        //}
-        //catch
-        //{
-        //    //GenerateSafeMinimalPdf(data, pdfPath);
-        //    //return pdfPath;
-        //}
+        try
+        {
+            var rows = data.Rows ?? new List<Dictionary<string, object?>>();
+            var cols = data.Columns ?? Array.Empty<string>();
+
+            // Burada ChartHelper, artık persist edilen XColumn / YColumn'u kullanacak
+            SqlToPdfWithAI.Services.ChartHelper.RenderCharts(
+                rows,
+                cols,
+                data.ReportId,
+                storageRoot,
+                data.XColumn,
+                data.YColumn
+            );
+        }
+        catch
+        {
+            
+        }
+
+        
         GenerateFullPdf(data, pdfPath);
-         return pdfPath;
+        return pdfPath;
     }
 
     private static void GenerateFullPdf(QueryPersistModelDto data, string pdfPath)
