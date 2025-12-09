@@ -41,7 +41,7 @@ namespace SqlToPdfWithAI.Controllers
                     ).ToList();
             }
 
-            // En yeni raporlar en yukarı gidecek şekilde.
+            // En yeni raporlar en yukarı
             list = list.OrderByDescending(x => x.CreatedAt).ToList();
 
             return View(list);
@@ -115,7 +115,7 @@ namespace SqlToPdfWithAI.Controllers
             if (data is null)
                 return StatusCode(500, "Rapor verisi okunamadı.");
 
-            var pdfPath = PdfHelper.BuildReportPdf(data); 
+            var pdfPath = PdfHelper.BuildReportPdf(data);
             var bytes = System.IO.File.ReadAllBytes(pdfPath);
             return File(bytes, "application/pdf", $"{id}.pdf");
         }

@@ -6,95 +6,20 @@ namespace SqlToPdfWithAI.Services;
 public static class ChartHelper
 {
     
+    /// data: satır listesi (kolon adı -> değer)
+    /// columns: kolon isimleri (sıralı)
+    /// storageRoot: env.ContentRootPath/storage
     
     public static List<string> RenderCharts(
-
-
         List<Dictionary<string, object?>> data,
         string[] columns,
         Guid reportId,
-        string storageRoot,
-        string? preferredXColumn = null,
-        string? preferredYColumn = null)
+        string storageRoot)
     {
-        if (!string.IsNullOrWhiteSpace(preferredXColumn) &&
-    !string.IsNullOrWhiteSpace(preferredYColumn) &&
-    columns.Contains(preferredXColumn) &&
-    columns.Contains(preferredYColumn))
-        {
-            var path = Path.Combine(storageRoot, $"{reportId}_chart1.png");
-            TryUserSelectedChart(data, preferredXColumn, preferredYColumn, 10, path);
-
-            if (File.Exists(path))
-            {                
-                return new List<string> { path };
-            }
-            
-        }
         var paths = new List<string>();
         if (data.Count == 0 || columns.Length == 0) return paths;
 
-        string? dtCol = null;
-        string? numCol = null;
-        string? catCol = null;
-        string? valCol = null;
-
-
-        // 1) Kullanıcı X/Y seçtiyse önce onu dene
-        if (!string.IsNullOrWhiteSpace(preferredXColumn) &&
-            !string.IsNullOrWhiteSpace(preferredYColumn) &&
-            columns.Contains(preferredXColumn) &&
-            columns.Contains(preferredYColumn))
-        {
-
-
-            //// tipi tahmin et
-            //bool xLooksDate = data.Take(20).Any(r =>
-            //    r.TryGetValue(preferredXColumn, out var v) && DataTypeHelper.IsDate(v));
-
-            //bool xLooksString = data.Take(20).Any(r =>
-            //    r.TryGetValue(preferredXColumn, out var v) && v is string);
-
-            //bool yLooksNumeric = data.Take(20).Any(r =>
-            //    r.TryGetValue(preferredYColumn, out var v) && DataTypeHelper.IsNumeric(v));
-
-            //if (xLooksDate && yLooksNumeric)
-            //{
-            //    // X = tarih, Y = sayı → line chart
-            //    dtCol = preferredXColumn;
-            //    numCol = preferredYColumn;
-            //}
-            //else if (xLooksString && yLooksNumeric)
-            //{
-            //    // X = string, Y = sayı → bar chart
-            //    catCol = preferredXColumn;
-            //    valCol = preferredYColumn;
-            //}
-            // aksi durumda (ör. X numeric, Y string) kullanıcı seçimi geçersiz sayılır,
-            // aşağıda otomatik algoritmaya düşer
-        }
-
-        // 2) Kullanıcı seçimi line chart'a uyduysa onu çiz
-        if (dtCol is not null && numCol is not null)
-        {
-            var path = Path.Combine(storageRoot, $"{reportId}_chart1.png");
-            TryLineChartV4(data, dtCol!, numCol!, path);
-            if (File.Exists(path)) paths.Add(path);
-            return paths; // tek grafik yeter
-        }
-
-        // 3) Kullanıcı seçimi bar chart'a uyduysa onu çiz
-        if (catCol is not null && valCol is not null)
-        {
-            var path = Path.Combine(storageRoot, $"{reportId}_chart1.png");
-            TryBarChartTopKV4(data, catCol!, valCol!, 10, path);
-            if (File.Exists(path)) paths.Add(path);
-            return paths;
-        }
-
-        // 4) Kullanıcı seçimi yoksa / geçersizse → ESKİ OTOMATİK MANTIK
-
-        // 4.a) datetime + numeric => Line
+        
         var (autoDt, autoNum) = FindDateTimeAndNumericColumns(data, columns);
         if (autoDt is not null && autoNum is not null)
         {
@@ -104,7 +29,6 @@ public static class ChartHelper
             return paths;
         }
 
-        // 4.b) string + numeric => Bar (ilk 10 kategori)
         var (autoCat, autoVal) = FindCategoryAndNumericColumns(data, columns);
         if (autoCat is not null && autoVal is not null)
         {
@@ -114,7 +38,6 @@ public static class ChartHelper
             return paths;
         }
 
-        // uygun kombinasyon yoksa grafik yok
         return paths;
     }
 
@@ -247,47 +170,4 @@ public static class ChartHelper
             default: d = 0; return false;
         }
     }
-    private static void TryUserSelectedChart(
-    List<Dictionary<string, object?>> data,
-    string xCol,
-    string yCol,
-    int k,
-    string path)
-    {
-        try
-        {
-            var groups = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var row in data)
-            {
-                if (!row.TryGetValue(xCol, out var xv)) continue;
-                if (!row.TryGetValue(yCol, out var yv)) continue;
-
-                if (!TryToDouble(yv, out var d)) continue;
-
-                var key = xv?.ToString() ?? "(boş)";
-                groups[key] = groups.TryGetValue(key, out var cur) ? cur + d : d;
-            }
-
-            if (groups.Count == 0) return;
-
-            var top = groups.OrderByDescending(kv => kv.Value).Take(k).ToList();
-            double[] values = top.Select(t => t.Value).ToArray();
-            string[] labels = top.Select(t => t.Key).ToArray();
-
-            var plt = new ScottPlot.Plot(900, 500);
-            plt.AddBar(values);
-            plt.XTicks(labels);
-            plt.XAxis.TickLabelStyle(rotation: 45);
-            plt.Title($"{xCol} - {yCol} (Kullanıcı Seçimi)");
-            plt.YLabel(yCol);
-
-            plt.SaveFig(path, 900, 500);
-        }
-        catch
-        {
-            return;
-        }
-    }
-
 }

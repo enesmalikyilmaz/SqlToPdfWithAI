@@ -10,7 +10,7 @@ namespace SqlToPdfWithAI.Controllers
     public class ReportController : ControllerBase
     {
         [HttpGet("{id:guid}")]
-        public IActionResult Get(Guid id, [FromQuery] string? x = null, [FromQuery] string? y = null)
+        public IActionResult Get(Guid id)
         {
             var storageRoot = Path.Combine(AppContext.BaseDirectory, "storage");
             Directory.CreateDirectory(storageRoot);
@@ -25,29 +25,7 @@ namespace SqlToPdfWithAI.Controllers
             if (data is null)
                 return StatusCode(500, "Rapor verisi okunamadı.");
 
-            try
-            {
-                var rows = data.Rows ?? new List<Dictionary<string, object?>>();
-                var cols = data.Columns ?? Array.Empty<string>();
-
-                // Querystring boş ise null'a çevir
-                var xCol = string.IsNullOrWhiteSpace(x) ? null : x;
-                var yCol = string.IsNullOrWhiteSpace(y) ? null : y;
-
-                ChartHelper.RenderCharts(
-                    rows,
-                    cols,
-                    data.ReportId,
-                    storageRoot,
-                    xCol,
-                    yCol
-                );
-            }
-            catch
-            {
-            }
-
-            // Her çağrıda yeniden üretilen PDF'i üret
+            // Her çağrıda yeniden üretilen PDF'i oluştur
             var pdfPath = PdfHelper.BuildReportPdf(data);
             var fileBytes = System.IO.File.ReadAllBytes(pdfPath);
 

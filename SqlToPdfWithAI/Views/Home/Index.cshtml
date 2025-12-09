@@ -16,8 +16,6 @@
             <input id="reportName" name="reportName" class="form-control"
                    placeholder="Örn: Satış Analizi / Depo Raporu" />
         </div>
-
-        
         
 
         <button id="runBtn" class="btn btn-primary" type="submit">
@@ -77,12 +75,14 @@
 
             const errorBox    = document.getElementById('errorBox');
 
-            function show(el){ el.classList.remove('d-none'); }
-            function hide(el){ el.classList.add('d-none'); }
-            function clearChildren(el){ while (el.firstChild) el.removeChild(el.firstChild); }
+
+            
+            function show(el) { el.classList.remove('d-none'); }
+            function hide(el) { el.classList.add('d-none'); }
+            function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
             form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+                e.preventDefault(); // SAYFA YENİLENMESİN
 
                 hide(errorBox);
                 hide(resultCard);
@@ -97,7 +97,9 @@
                 }
 
                 const reportName = document.getElementById('reportName').value || '';
+                
 
+                
                 btn.disabled = true;
                 const oldText = btn.textContent;
                 btn.textContent = 'Çalıştırılıyor...';
@@ -117,9 +119,11 @@
                         throw new Error(msg || ('HTTP ' + resp.status));
                     }
 
-                    const data = await resp.json();
+                    const data = await resp.json(); 
+                    
+                    
 
-                    // Sonuç bilgileri
+                    // Sonuç bilgilerini yaz
                     reportIdEl.textContent = data.reportId;
                     rowCountEl.textContent = data.rowCount;
                     durationEl.textContent = data.durationMs;
@@ -127,7 +131,6 @@
 
                     // PDF linkini hazırla
                     pdfLink.href = `/api/report/${data.reportId}`;
-                    pdfLink.target = '_blank';
                     pdfLink.classList.remove('d-none');
 
                     // Önizleme tablosu
@@ -135,20 +138,20 @@
                     clearChildren(tbodyRows);
 
                     if (data.columns && data.columns.length > 0) {
-
+                        // thead
                         data.columns.forEach(c => {
                             const th = document.createElement('th');
                             th.textContent = c;
                             theadRow.appendChild(th);
                         });
 
+                        // tbody
                         if (data.preview && data.preview.length) {
                             data.preview.forEach(row => {
                                 const tr = document.createElement('tr');
                                 data.columns.forEach(c => {
                                     const td = document.createElement('td');
-                                    const val = row[c];
-                                    td.textContent = (val !== undefined && val !== null) ? val : '';
+                                    td.textContent = row[c] ?? '';
                                     tr.appendChild(td);
                                 });
                                 tbodyRows.appendChild(tr);
@@ -178,4 +181,3 @@
         })();
     </script>
 }
-

@@ -30,29 +30,9 @@ public static class PdfHelper
         // QuestPDF genel ayarları
         QuestPDF.Settings.License = LicenseType.Community;
 
-        try
-        {
-            var rows = data.Rows ?? new List<Dictionary<string, object?>>();
-            var cols = data.Columns ?? Array.Empty<string>();
-
-            // Burada ChartHelper, artık persist edilen XColumn / YColumn'u kullanacak
-            SqlToPdfWithAI.Services.ChartHelper.RenderCharts(
-                rows,
-                cols,
-                data.ReportId,
-                storageRoot,
-                data.XColumn,
-                data.YColumn
-            );
-        }
-        catch
-        {
-            
-        }
-
         
         GenerateFullPdf(data, pdfPath);
-        return pdfPath;
+         return pdfPath;
     }
 
     private static void GenerateFullPdf(QueryPersistModelDto data, string pdfPath)
@@ -118,7 +98,7 @@ public static class PdfHelper
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(15); // tabloya biraz daha alan
+                page.Margin(15); // tabloya biraz daha alan verdik
                 page.Header().Text("Sonuçlar (ilk 50 satır)").SemiBold().FontSize(16);
 
                 page.Content().Column(c =>
@@ -132,7 +112,7 @@ public static class PdfHelper
                         return;
                     }
 
-                    // Table'i doğrudan Content'e koyuyoruz (sabit yükseklikli kaplar yok!)
+                    // Table'i doğrudan Content'e koyuyoruz
                     c.Item().Table(table =>
                     {
                         // Kolon tanımı
@@ -187,38 +167,5 @@ public static class PdfHelper
         }).GeneratePdf(pdfPath);
     }
 
-    // Tablo çok geniş/bozuksa düşülen minimal PDF
-    private static void GenerateSafeMinimalPdf(QueryPersistModelDto data, string pdfPath)
-    {
-        Document.Create(c =>
-        {
-            c.Page(p =>
-            {
-                p.Size(PageSizes.A4);
-                p.Margin(25);
-                p.Header().Text("SQL Raporu (Güvenli Mod)").SemiBold().FontSize(22);
-
-                p.Content().Column(col =>
-                {
-                    col.Spacing(6);
-                    col.Item().Text($"Rapor ID: {data.ReportId}");
-                    col.Item().Text($"Tarih: {DateTime.Now:yyyy-MM-dd HH:mm}");
-                    col.Item().Text($"Satır: {data.RowCount}");
-                    col.Item().Text($"Süre: {data.DurationMs} ms");
-                    col.Item().Text("Sorgu:").SemiBold();
-                    col.Item().Text(SoftWrap(data.Sql ?? string.Empty)).FontSize(10).FontColor(Colors.Grey.Darken2);
-                    col.Item().Text("Not: Tablo içeriği sayfa yerleşimine sığmadığı için bu sürümde atlandı.")
-                              .FontColor(Colors.Red.Darken2);
-                });
-
-                p.Footer().AlignRight().Text(t =>
-                {
-                    t.Span("SqlToPdfWithAI • ");
-                    t.CurrentPageNumber();
-                    t.Span(" / ");
-                    t.TotalPages();
-                });
-            });
-        }).GeneratePdf(pdfPath);
-    }
+    
 }

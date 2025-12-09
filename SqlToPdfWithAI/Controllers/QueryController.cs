@@ -28,7 +28,7 @@ public class QueryController : ControllerBase
         if (req is null || string.IsNullOrWhiteSpace(req.Sql))
             return BadRequest("SQL boş olamaz.");
 
-        // Basit kontrol yapıyoruz SELECT ile başlamalı
+        // Basit kontrol yapıyoruz SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geçmeli
         if (!QueryGuard.IsSafeSelect(req.Sql))
             return BadRequest("Sadece SELECT sorgularına izin verilir.");
 
@@ -53,7 +53,13 @@ public class QueryController : ControllerBase
                 .ToDictionary(kv => kv.Key, kv => kv.Value))
             .ToList();
 
-            
+            _ = ChartHelper.RenderCharts(
+                dictRows,
+                res.Columns,
+                res.ReportId,
+                storageRoot
+            );
+
             var persist = new QueryPersistModelDto
             {
                 ReportId = res.ReportId,
@@ -65,7 +71,7 @@ public class QueryController : ControllerBase
                 Rows = dictRows,       
                 RowCount = res.RowCount,
                 DurationMs = res.DurationMs,
-                CreatedAt = DateTime.Now,               
+                CreatedAt = DateTime.Now
             };
 
             var jsonPath = Path.Combine(storageRoot, $"{res.ReportId}.json");
@@ -74,8 +80,8 @@ public class QueryController : ControllerBase
                 System.Text.Json.JsonSerializer.Serialize(persist)
             );
 
-            _log.LogInformation("Query ok. rows={RowCount} ms={Ms}",
-                res.RowCount, res.DurationMs);
+            _log.LogInformation("Query ok. rows={RowCount} ms={Ms} x={X} y={Y}",
+                res.RowCount, res.DurationMs, req.XColumn, req.YColumn);
             return Ok(res);
         }
         catch (Exception ex)
