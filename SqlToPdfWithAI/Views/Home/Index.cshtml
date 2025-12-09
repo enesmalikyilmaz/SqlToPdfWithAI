@@ -34,19 +34,7 @@
             <p class="card-text mb-1"><strong>Satır:</strong> <span id="rowCount"></span></p>
             <p class="card-text mb-3"><strong>Süre:</strong> <span id="duration"></span> ms</p>
 
-            <div class="mb-3">
-                <label class="form-label">Grafik X Ekseni Kolonu (isteğe bağlı)</label>
-                <select id="xColumn" class="form-select">
-                    <option value="">Otomatik seç</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Grafik Y Ekseni Kolonu (isteğe bağlı)</label>
-                <select id="yColumn" class="form-select">
-                    <option value="">Otomatik seç</option>
-                </select>
-            </div>
+            
 
             <!-- PDF bağlantısı -->
             <a id="pdfLink" href="#" class="btn btn-success d-none" target="_blank">PDF indir</a>
@@ -87,8 +75,6 @@
 
             const errorBox    = document.getElementById('errorBox');
 
-            const xSelect     = document.getElementById('xColumn');
-            const ySelect     = document.getElementById('yColumn');
 
             
             function show(el) { el.classList.remove('d-none'); }
@@ -111,8 +97,7 @@
                 }
 
                 const reportName = document.getElementById('reportName').value || '';
-                const xColumn = xSelect.value || null;
-                const yColumn = ySelect.value || null;
+                
 
                 
                 btn.disabled = true;
@@ -125,9 +110,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             sql: sql,
-                            reportName: reportName,
-                            xColumn: xColumn,
-                            yColumn: yColumn
+                            reportName: reportName
                         })
                     });
 
@@ -136,25 +119,23 @@
                         throw new Error(msg || ('HTTP ' + resp.status));
                     }
 
-                    const data = await resp.json();
+                    const data = await resp.json(); 
                     
                     
-                    xSelect.length = 1;
-                    ySelect.length = 1;
 
-                    if (data.columns && data.columns.length) {
-                        data.columns.forEach(colName => {
-                            const optX = document.createElement('option');
-                            optX.value = colName;
-                            optX.textContent = colName;
-                            xSelect.appendChild(optX);
+                    // if (data.columns && data.columns.length) {
+                    //     data.columns.forEach(colName => {
+                    //         const optX = document.createElement('option');
+                    //         optX.value = colName;
+                    //         optX.textContent = colName;
+                    //         xSelect.appendChild(optX);
 
-                            const optY = document.createElement('option');
-                            optY.value = colName;
-                            optY.textContent = colName;
-                            ySelect.appendChild(optY);
-                        });
-                    }
+                    //         const optY = document.createElement('option');
+                    //         optY.value = colName;
+                    //         optY.textContent = colName;
+                    //         ySelect.appendChild(optY);
+                    //     });
+                    // }
 
                     // Sonuç bilgilerini yaz
                     reportIdEl.textContent = data.reportId;
@@ -184,8 +165,7 @@
                                 const tr = document.createElement('tr');
                                 data.columns.forEach(c => {
                                     const td = document.createElement('td');
-                                    const val = row[c];
-                                    td.textContent = (val !== undefined && val !== null) ? val : '';
+                                    td.textContent = row[c] ?? '';
                                     tr.appendChild(td);
                                 });
                                 tbodyRows.appendChild(tr);

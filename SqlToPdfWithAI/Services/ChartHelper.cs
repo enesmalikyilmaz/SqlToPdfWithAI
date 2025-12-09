@@ -55,8 +55,7 @@ public static class ChartHelper
                 catCol = preferredXColumn;
                 valCol = preferredYColumn;
             }
-            // aksi durumda (ör. X numeric, Y string) kullanıcı seçimi geçersiz sayılır,
-            // aşağıda otomatik algoritmaya düşer
+            
         }
 
         // 2) Kullanıcı seçimi line chart'a uyduysa onu çiz

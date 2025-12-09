@@ -28,7 +28,7 @@ public class QueryController : ControllerBase
         if (req is null || string.IsNullOrWhiteSpace(req.Sql))
             return BadRequest("SQL boş olamaz.");
 
-        // Basit kontrol yapıyoruz SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geç
+        // Basit kontrol yapıyoruz SELECT ile başlamalı ve bazı tehlikeli kelimeler yoksa geçmeli
         if (!QueryGuard.IsSafeSelect(req.Sql))
             return BadRequest("Sadece SELECT sorgularına izin verilir.");
 

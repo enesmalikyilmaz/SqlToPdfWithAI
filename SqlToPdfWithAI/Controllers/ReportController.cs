@@ -25,7 +25,7 @@ namespace SqlToPdfWithAI.Controllers
             if (data is null)
                 return StatusCode(500, "Rapor verisi okunamadı.");
 
-            // PDF'i oluştur (her çağrıda yeniden üretir)
+            // Her çağrıda yeniden üretilen PDF'i oluştur
             var pdfPath = PdfHelper.BuildReportPdf(data);
             var fileBytes = System.IO.File.ReadAllBytes(pdfPath);
 

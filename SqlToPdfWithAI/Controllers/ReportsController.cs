@@ -115,7 +115,7 @@ namespace SqlToPdfWithAI.Controllers
             if (data is null)
                 return StatusCode(500, "Rapor verisi okunamadı.");
 
-            var pdfPath = PdfHelper.BuildReportPdf(data); // PdfHelper içinde de aynı storage mantığı kullanırsın
+            var pdfPath = PdfHelper.BuildReportPdf(data);
             var bytes = System.IO.File.ReadAllBytes(pdfPath);
             return File(bytes, "application/pdf", $"{id}.pdf");
         }
