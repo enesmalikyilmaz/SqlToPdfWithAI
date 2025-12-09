@@ -13,7 +13,7 @@
         {
             if (v is null) return false;
             if (v is DateTime) return true;
-            // string tarih gibi gelirse kaba deneme:
+            // string tarih gibi gelirse diye kaba bir deneme:
             if (v is string s && DateTime.TryParse(s, out _)) return true;
             return false;
         }

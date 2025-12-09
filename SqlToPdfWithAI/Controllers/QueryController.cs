@@ -57,9 +57,7 @@ public class QueryController : ControllerBase
                 dictRows,
                 res.Columns,
                 res.ReportId,
-                storageRoot,
-                req.XColumn,
-                req.YColumn
+                storageRoot
             );
 
             var persist = new QueryPersistModelDto

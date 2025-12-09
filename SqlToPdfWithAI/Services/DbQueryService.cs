@@ -2,8 +2,7 @@
 using System.Diagnostics;
 using System.Dynamic;
 using Dapper;
-using Microsoft.Data.SqlClient; // SQL Server kullanıyorsan
-// using Npgsql; // PostgreSQL için
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 
 namespace SqlToPdfWithAI.Services;

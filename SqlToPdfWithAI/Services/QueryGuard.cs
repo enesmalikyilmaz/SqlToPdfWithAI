@@ -8,11 +8,11 @@ public static class QueryGuard
     {
         if (string.IsNullOrWhiteSpace(sql)) return false;
 
-        // SELECT ile başlasın (çok kaba)
+        // SELECT ile başlasın
         if (!Regex.IsMatch(sql, @"^\s*SELECT\b", RegexOptions.IgnoreCase))
             return false;
 
-        // En temel kara liste (kısa tutuyoruz)
+        // En temel kara liste
         var forbidden = new[] { "INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "EXEC", "MERGE", "CREATE" };
         var upper = " " + sql.ToUpperInvariant() + " ";
         foreach (var f in forbidden)
@@ -31,7 +31,7 @@ public static class QueryGuard
     {
         if (maxRows <= 0) return sql;
 
-        // İptidai: SQL Server varsay, TOP yoksa ekle
+        // SQL Server varsay, TOP yoksa ekle
         if (!Regex.IsMatch(sql, @"\bTOP\s+\d+\b", RegexOptions.IgnoreCase))
             return Regex.Replace(sql, @"^\s*SELECT\s+(DISTINCT\s+)?",
                 m => $"SELECT {m.Groups[1].Value}TOP {maxRows} ",
