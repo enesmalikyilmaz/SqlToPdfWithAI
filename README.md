@@ -1,213 +1,233 @@
 # SqlToPdfWithAI
 
-📄 README.md — SqlToPdfWithAI
-SqlToPdfWithAI
-
 SQL sorgularını otomatik olarak çalıştırıp sonuçlarını grafik + tablo şeklinde profesyonel bir PDF raporuna dönüştüren ASP.NET Core uygulaması.
 
 Bu proje, kurumsal raporlama ihtiyaçlarını minimum kullanıcı etkileşimi ile çözmek amacıyla geliştirilmiştir.
 Kullanıcıdan yalnızca SELECT sorgusu alınır, gerisini sistem tamamen otomatik yapar.
 
-🚀 Özellikler
-✔ SQL → PDF Rapor Dönüşümü
+## 🚀 Özellikler
+### ✔ SQL → PDF Rapor Dönüşümü
 
-Kullanıcı yalnızca SQL sorgusunu yazar.
+- Kullanıcı yalnızca SQL sorgusunu yazar.
 
-Sistem sonucu işler, analiz eder ve PDF’e dönüştürür.
+- Sistem sonucu işler, analiz eder ve PDF’e dönüştürür.
 
-✔ Otomatik Grafik Üretimi
+### ✔ Otomatik Grafik Üretimi
 
-Sistem kolon tiplerini analiz eder ve grafiği kendi seçer:
+- Sistem kolon tiplerini analiz eder ve grafiği kendi seçer:
 
-Tarih + Sayısal → Line Chart
+- Tarih + Sayısal → Line Chart
 
-Kategori (string) + Sayısal → Bar Chart (Top 10)
+- Kategori (string) + Sayısal → Bar Chart (Top 10)
 
-Sayısal kolon yoksa grafik üretilmez (PDF’e bilgi mesajı eklenir)
+- Sayısal kolon yoksa grafik üretilmez (PDF’e bilgi mesajı eklenir)
 
-✔ PDF İçeriği
+### ✔ PDF İçeriği
 
-Rapor adı
+- Rapor adı
 
-Oluşturulma tarihi
+- Oluşturulma tarihi
 
-Sorgu metni
+- Sorgu metni
 
-Satır sayısı, süre, kolon bilgileri
+- Satır sayısı, süre, kolon bilgileri
 
-Otomatik grafik
+- Otomatik grafik
 
-Veri tablosu (ilk 50 kayıt)
+- Veri tablosu (ilk 50 kayıt)
 
-✔ Rapor Arşivleme
+### ✔ Rapor Arşivleme
 
 Her sorgu:
 
-benzersiz bir ReportId ile kayıt altına alınır,
+- benzersiz bir ReportId ile kayıt altına alınır,
 
-İstenilen isim verilir,
+- İstenilen isim verilir,
 
-JSON formatında saklanır,
+- JSON formatında saklanır,
 
-istenildiğinde tekrar PDF olarak indirilebilir.
+- istenildiğinde tekrar PDF olarak indirilebilir.
 
-✔ Basit ve Temiz UI
+### ✔ Basit ve Temiz UI
 
 Kullanıcıdan sadece:
 
-SQL sorgusu
+- SQL sorgusu
 
-Rapor adı
+- Rapor adı
 
-alınır. Grafik seçimi yapılmaz — sistem kendisi en doğru grafiği üretir.
+alınır. Sistem kendisi en doğru grafiği üretir.
 
-🛠 Kullanılan Teknolojiler
+### 🛠 Kullanılan Teknolojiler
 
-ASP.NET Core 9 MVC
+- ASP.NET Core 9 MVC
 
-Dapper
+- Dapper
 
-ScottPlot (grafik)
+- ScottPlot (grafik)
 
-QuestPDF (PDF)
+- QuestPDF (PDF)
 
-SQL Server
+- SQL Server
 
-Bootstrap 5
+- Bootstrap 5
 
-📦 Kurulum
+## 📦 Kurulum
 1️⃣ Repoyu Klonlayın
-git clone https://github.com/kullaniciadi/SqlToPdfWithAI.git
+```
+git clone https://github.com/enesmalikyilmaz/SqlToPdfWithAI.git
 cd SqlToPdfWithAI
-
-🗄 Veritabanı Bağlantısı
+```
+## 🗄 Veritabanı Bağlantısı
 
 Projenizi kendi SQL Server veritabanınıza bağlamak için şu dosyayı düzenleyin:
 
-📌 appsettings.json
+``` 📌 appsettings.json
 "ConnectionStrings": {
   "DefaultConnection": "Server=.;Database=YOUR_DB_NAME;User Id=sa;Password=yourPassword;"
-}
-
+} 
+```
 Açıklamalar:
 
-Server=.; → local instance
+- Server=.; → local instance
 
-Integrated Security=True → Windows Authentication
+- Integrated Security=True → Windows Authentication
 
-Uzak sunucu örneği:
+- Uzak sunucu örneği:
 
 "Server=192.168.1.20;Database=MyDb;User Id=sa;Password=123;"
 
 
 Uygulama başka bir ayara ihtiyaç duymadan bu bağlantıyla çalışır.
 
-📝 Loglama Neden Önemli?
+## 📝 Loglama Neden Önemli?
 
 Uygulamada log mekanizması, özellikle:
 
-performans ölçümü,
+- performans ölçümü,
 
-hata analizleri,
+- hata analizleri,
 
-kullanıcı davranış takibi
+- kullanıcı davranış takibi
 
 için kritik rol oynar.
 
-✔ Loglar sayesinde:
+### ✔ Loglar sayesinde:
 
-Hangi SQL sorgusunun kaç ms sürdüğünü görürsünüz
+- Hangi SQL sorgusunun kaç ms sürdüğünü görürsünüz
 
-Hata oluştuğunda tam olarak nerede olduğunu anlarsınız
+- Hata oluştuğunda tam olarak nerede olduğunu anlarsınız
 
-Grafik oluşturma hatalarının nedeni loglarda görünür
+- Grafik oluşturma hatalarının nedeni loglarda görünür
 
-Üretim ortamında teşhis süresi saniyelere düşer
-
-
-🛡 Try/Catch Kullanımı ve Sağladığı Güvenlik
-
-Bu projede try/catch blokları stratejik olarak kullanılmıştır.
-
-✔ Try/Catch Ne Sağlar?
-
-Uygulamanın çökmesini engeller
-
-Hata detaylarını loglara düşürür
-
-Kullanıcıya temiz mesaj verir
-
-Geliştiricinin problemi hızlı anlamasını sağlar
+- Üretim ortamında teşhis süresi saniyelere düşer
 
 
-📊 Otomatik Grafik Mantığı
+## 🛡 Try/Catch Kullanımı ve Sağladığı Güvenlik
+
+Bu projede try/catch blokları kullanılmıştır.
+
+### ✔ Try/Catch Ne Sağlar?
+
+- Uygulamanın çökmesini engeller
+
+- Hata detaylarını loglara düşürür
+
+- Kullanıcıya temiz mesaj verir
+
+- Geliştiricinin problemi hızlı anlamasını sağlar
+
+
+## 📊 Otomatik Grafik Mantığı
 
 Sistem veriyi analiz eder ve grafik tipini kendi seçer:
-
-Şart	Grafik
+```
+     Şart	              Grafik
 Tarih + Sayısal kolon	Line Chart
 String + Sayısal kolon	Bar Chart (Top 10)
 Hiç sayısal kolon yok	Grafik eklenmez
-🎨 Geliştirme Olanakları
+```
+## 🎨 Geliştirme Olanakları
 
 Bu proje grafik motoru açısından genişletilebilir yapıdadır.
 
-Eklenebilir Grafik Türleri:
+### Eklenebilir Grafik Türleri:
 
-Pie Chart
+- Pie Chart
 
-Scatter Plot
+- Scatter Plot
 
-Multi-Series Line Chart
+- Multi-Series Line Chart
 
-Heatmap
+- Heatmap
 
-Box Plot
+- Box Plot
 
-Yeni Özellik Fikirleri:
+### Yeni Özellik Fikirleri:
 
-Kullanıcıya grafik teması seçtirme
+- Kullanıcıya grafik teması seçtirme
 
-Birden fazla grafik üretme
+- Birden fazla grafik üretme
 
-ML tabanlı “en iyi grafik” öneri sistemi
+- ML tabanlı “en iyi grafik” öneri sistemi
 
-PDF tasarım şablonları
+- PDF tasarım şablonları
 
-Karanlık tema / açık tema PDF üretimi
+- Karanlık tema / açık tema PDF üretimi
 
-📂 Proje Yapısı
+## 📂 Proje Yapısı
+```
 SqlToPdfWithAI/
+├── Connected Services/
+├── Dependencies/
+├── Properties/
+├── wwwroot/
 │
 ├── Controllers/
+│   ├── HomeController.cs
 │   ├── QueryController.cs
-│   └── ReportController.cs
-│
-├── Services/
-│   ├── ChartHelper.cs
-│   ├── PdfHelper.cs
-│   └── DbQueryService.cs
+│   ├── ReportController.cs
+│   └── ReportsController.cs
 │
 ├── Dtos/
-│   ├── QueryRequestDto.cs
 │   ├── QueryPersistModelDto.cs
-│   └── QueryResponseDto.cs
+│   ├── QueryRequestDto.cs
+│   ├── QueryResponseDto.cs
+│   ├── ReportListItemDto.cs
+│   └── ReportRenameViewModelDto.cs
+│
+├── logs/                 
+│
+├── Models/               
+│
+├── Services/
+│   ├── ChartHelper.cs       
+│   ├── DataTypeHelper.cs   
+│   ├── DbQueryService.cs    
+│   ├── PdfHelper.cs         
+│   └── QueryGuard.cs        
+│
+├── storage/
+│   ├── *.json               
+│   ├── *chart1.png          
+│   └── *.pdf                
 │
 ├── Views/
-│   └── Home/Index.cshtml
+│   └── Home/
+│       └── Index.cshtml
+|   └── Reports/
+│       └── Index.cshtml  
 │
-└── storage/
-    ├── *.json
-    ├── *chart1.png
-    └── *.pdf
+├── appsettings.json
+├── program.cs
+└── SqlToPdfWithAI.csproj
 
+```
 
-▶ Kullanım
-1️⃣ SQL sorgusunu yaz
-2️⃣ Rapor adını gir
-3️⃣ “Rapor Al” butonuna bas
-4️⃣ “PDF indir” butonuyla raporu indir
+## ▶ Kullanım
+- 1️⃣ SQL sorgusunu yaz
+- 2️⃣ Rapor adını gir
+- 3️⃣ “Rapor Al” butonuna bas
+- 4️⃣ “PDF indir” butonuyla raporu indir
 
-Sistem veri yapısına göre grafik türünü otomatik belirler.Lisans
-
-MIT License
+Sistem veri yapısına göre grafik türünü otomatik belirler.
