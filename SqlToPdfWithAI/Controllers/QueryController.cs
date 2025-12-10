@@ -81,7 +81,7 @@ public class QueryController : ControllerBase
             );
 
             _log.LogInformation("Query ok. rows={RowCount} ms={Ms} x={X} y={Y}",
-                res.RowCount, res.DurationMs, req.XColumn, req.YColumn);
+                res.RowCount, res.DurationMs);
             return Ok(res);
         }
         catch (Exception ex)
